@@ -5,20 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Import CSV</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-lg">
-        <h1 class="text-2xl font-semibold mb-4">Import CSV</h1>
 
+    <!-- Include jQuery and DataTables CSS/JS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center py-8">
+    <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-3xl space-y-8">
+        <div class="border-b pb-4 mb-4">
+            <h1 class="text-3xl font-bold text-center text-gray-800">Import CSV</h1>
+        </div>
+
+        <!-- Success and Error Messages -->
         @if (session('success'))
-            <div class="mb-4 p-3 bg-green-200 text-green-700 border border-green-300 rounded">
+            <div class="p-4 mb-4 bg-green-100 text-green-800 rounded border border-green-300">
                 {{ session('success') }}
             </div>
         @endif
 
         @if ($errors->any())
-            <div class="mb-4 p-3 bg-red-200 text-red-700 border border-red-300 rounded">
-                <ul>
+            <div class="p-4 mb-4 bg-red-100 text-red-800 rounded border border-red-300">
+                <ul class="list-disc list-inside">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -26,31 +34,62 @@
             </div>
         @endif
 
-        <form id="upload-form" action="{{ route('csv file upload') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+        <!-- CSV Upload Form -->
+        <form id="upload-form" action="{{ route('csv file upload') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
-
-            <div class="flex items-center space-x-4">
-                <label for="file" class="block text-gray-700">CSV File:</label>
-                <input type="file" name="file" id="file" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-md">
+            <div class="flex flex-col space-y-2">
+                <label for="file" class="text-gray-700 font-medium">CSV File</label>
+                <input type="file" name="file" id="file" class="border border-gray-300 rounded-md p-2 w-full text-gray-800">
             </div>
-
-            <button type="submit" class="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+            <button type="submit" class="w-full bg-blue-500 text-white py-3 rounded-md font-semibold hover:bg-blue-600 transition duration-300">
                 Import
             </button>
         </form>
 
-        <div id="progress-container" class="hidden mt-4">
-            <p id="progress-text" class="mb-2 text-gray-700">Processing...</p>
-            <div class="relative pt-1">
-                <div class="flex mb-2 items-center justify-between">
-                    <div class="text-xs font-medium text-blue-600" id="progress-percentage">0%</div>
-                </div>
-                <div class="flex">
-                    <div id="progress-fill" class="bg-blue-500 text-xs leading-none py-1 text-center text-white rounded"></div>
-                </div>
+        <!-- Progress Bar -->
+        <div id="progress-container" class="hidden mt-8">
+            <p id="progress-text" class="text-gray-700 font-medium mb-2">Processing...</p>
+            <div class="relative w-full h-4 bg-gray-200 rounded overflow-hidden">
+                <div id="progress-fill" class="absolute left-0 top-0 h-full bg-blue-500" style="width: 0;"></div>
             </div>
+            <div class="text-right text-xs font-medium text-gray-600 mt-2" id="progress-percentage">0%</div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="mt-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Users List</h2>
+            <table id="users-table" class="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+                <thead>
+                    <tr class="bg-gray-100 border-b border-gray-200">
+                        <th class="py-3 px-6 text-left text-sm font-semibold text-gray-600">ID</th>
+                        <th class="py-3 px-6 text-left text-sm font-semibold text-gray-600">Name</th>
+                        <th class="py-3 px-6 text-left text-sm font-semibold text-gray-600">Email</th>
+                        <th class="py-3 px-6 text-left text-sm font-semibold text-gray-600">Contact No</th>
+                        <th class="py-3 px-6 text-left text-sm font-semibold text-gray-600">Address</th>
+                        <th class="py-3 px-6 text-left text-sm font-semibold text-gray-600">Created At</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
     </div>
+    <script>
+        $(document).ready(function () {
+            const usersTable = $('#users-table').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: "{{ route('users.data') }}",
+                columns: [
+                    { data: 'id', name: 'id' },
+                    { data: 'name', name: 'name' },
+                    { data: 'email', name: 'email' },
+                    { data: 'contact_no', name: 'contact_no' },
+                    { data: 'address', name: 'address' },
+                    { data: 'created_at', name: 'created_at' }
+                ]
+            });
+        });
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -68,13 +107,12 @@
 
                 xhr.open('POST', form.action, true);
                 xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                
+
                 xhr.onload = function () {
                     if (xhr.status === 200) {
                         const response = JSON.parse(xhr.responseText);
-                       
                         const jobId = response.jobId;
-                        
+
                         progressContainer.classList.remove('hidden');
                         checkProgress(jobId);
                     }
@@ -95,11 +133,14 @@
 
                             if (progress === 100) {
                                 clearInterval(interval);
+                                const usersTable = $('#users-table').DataTable();
+                                usersTable.ajax.reload();
                             }
                         });
-                }, 1000); 
+                }, 1000);
             }
         });
     </script>
+
 </body>
 </html>

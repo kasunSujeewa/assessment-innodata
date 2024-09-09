@@ -10,3 +10,5 @@ Route::get('/', function () {
 Route::post('/csv-upload',[CsvImportController::class,'importCsv'])->name('csv file upload');
 
 Route::get('/job-progress/{jobId}', [CsvImportController::class, 'getJobProgress'])->name('job-progress');
+
+Route::get('/users/data', [CsvImportController::class, 'getData'])->name('users.data');

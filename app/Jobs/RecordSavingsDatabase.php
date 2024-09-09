@@ -43,6 +43,6 @@ class RecordSavingsDatabase implements ShouldQueue
             Cache::put("job-progress-{$this->jobId}", $progress);
         }
 
-        Cache::put("job-progress-{$this->jobId}", 100); 
+        Cache::put("job-progress-{$this->jobId}", 100);
     }
 }
