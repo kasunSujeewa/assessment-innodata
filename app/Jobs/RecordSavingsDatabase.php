@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\CsvData;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -29,10 +29,12 @@ class RecordSavingsDatabase implements ShouldQueue
         $processed = 0;
 
         foreach ($this->batch as $data) {
-            CsvData::create([
+            User::create([
                 'name' => $data[0],
-                'description' => $data[1],
-                'status' => $data[2] == 'Yes' ? true : false,
+                'email' => $data[1],
+                'contact_no' => $data[2],
+                'address' => $data[3],
+                //'birthday' => $data[4] ,
             ]);
 
             $processed++;
